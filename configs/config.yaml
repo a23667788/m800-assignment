@@ -1,0 +1,12 @@
+line:
+  name: Miggy
+  id: 333xdpiw
+  address: a23667788@gmail.com
+  user_id: U5e8510cd7ee289879da2c2010bc55843
+channel:
+  channel_id: 2000598124
+  channel_secret: 5c8da93500391833011f5416ef6a1faf
+  channel_access_token: W7cGD4kW/RcotGtvNZghy6VJX6Q2SLqfwyVH3mYlOMkwvTGgYeFqqg6OMFF7wHs3Rtw6zhczd7oxVAr3bYrMTEnWYmC1W1TQ2/c2TSX8u4Yb1dSmxVrwGLttJXKkno8r7Gc3g8/QY8CL3s0WLqk9bQdB04t89/1O/w1cDnyilFU=
+mongodb:
+  name: m800-mongo
+  connectionString: mongodb://localhost:27017
