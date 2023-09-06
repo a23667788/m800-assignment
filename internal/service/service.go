@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"github.com/a23667788/m800-assignment/internal/line"
 	"github.com/gin-gonic/gin"
 	"github.com/line/line-bot-sdk-go/linebot"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type m800Service struct {
@@ -89,12 +91,26 @@ func (s *m800Service) StartWebServer() {
 		} else {
 			lineTextMessage := linebot.NewTextMessage(lineMessage.Message)
 			if _, err := s.Client.PushMessage(lineMessage.UserID, lineTextMessage).Do(); err != nil {
-				c.JSON(http.StatusBadRequest, err.Error())
+				c.JSON(http.StatusBadRequest, err)
 			} else {
 				c.JSON(http.StatusOK, "Message sent")
 			}
 		}
+	})
 
+	router.GET("/message", func(c *gin.Context) {
+		userid := c.Query("userid")
+
+		res, err := queryLineEvent(s.Mongo, "message", "source.userid", userid)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if len(*res) == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Resource not found"})
+		} else {
+			c.JSON(http.StatusOK, res)
+		}
 	})
 
 	portStr := strconv.Itoa(s.Port)
@@ -107,4 +123,30 @@ func handleTextMessage(bot *linebot.Client, replyToken string, messageText strin
 	if _, err := bot.ReplyMessage(replyToken, linebot.NewTextMessage(messageText)).Do(); err != nil {
 		log.Println(err)
 	}
+}
+
+func queryLineEvent(db *database.Mongo, collectionName string, field string, filterString string) (*[]database.RawEvent, error) {
+	if db == nil {
+		return nil, fmt.Errorf("nil db")
+	}
+	if collectionName == "" {
+		return nil, fmt.Errorf("empty collectionName")
+	}
+
+	var res []database.RawEvent
+	var err error
+	if filterString != "" {
+		filter := bson.M{field: bson.M{"$eq": filterString}}
+		res, err = db.QueryEvent("message", filter)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res, err = db.QueryAllEvent("message")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &res, nil
 }
