@@ -74,6 +74,29 @@ func (s *m800Service) StartWebServer() {
 
 	})
 
+	router.POST("/message", func(c *gin.Context) {
+		var lineMessage line.LineMessage
+
+		if err := c.ShouldBindJSON(&lineMessage); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if lineMessage.UserID == "" {
+			c.JSON(http.StatusNotFound, "User Id is empty")
+		} else if lineMessage.Message == "" {
+			c.JSON(http.StatusBadRequest, "Message is empty")
+		} else {
+			lineTextMessage := linebot.NewTextMessage(lineMessage.Message)
+			if _, err := s.Client.PushMessage(lineMessage.UserID, lineTextMessage).Do(); err != nil {
+				c.JSON(http.StatusBadRequest, err.Error())
+			} else {
+				c.JSON(http.StatusOK, "Message sent")
+			}
+		}
+
+	})
+
 	portStr := strconv.Itoa(s.Port)
 	router.Run(":" + portStr)
 
